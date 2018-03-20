@@ -1,0 +1,17 @@
+import random
+import os
+import shutil
+
+root = "/path/dataset/"
+name_list = os.listdir(os.path.join(root,"all"))
+name_label_list = list([x[:-4] for x in name_list])
+name_unique = list(set([x[:-4] for x in name_list]))
+count = len(name_unique)//5
+random_name_list = list(random.choice(name_unique) for _ in range(count))
+for x in random_name_list:
+    try:
+        print("moving",x)
+        shutil.move(root+"all/"+x+".jpg", "/path/dataset/val")
+        shutil.move(root+"all/"+x+".xml", "/path/dataset/val")
+    except:
+        pass

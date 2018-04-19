@@ -1,0 +1,49 @@
+from __future__ import print_function
+from __future__ import absolute_import
+from torch.utils.data import Dataset
+# import matplotlib.pyplot as plt
+import sys, xml
+import numpy as np
+# import mxnet as mx
+import json, cv2, os
+import logging
+import xml.etree.ElementTree as ET
+
+
+xml_path="/media/hszc/data/syh/tesseract/data"
+images_path="/media/hszc/data/syh/tesseract/data"
+
+images_path = images_path
+index = 0
+objs = []
+resoult = {}
+for x, _, z in os.walk(xml_path):
+    for name in z:
+        if str(name).endswith(".xml"):
+            oneimg = {}
+            oneimg['boxes'] = []
+            root = ET.parse(os.path.join(x, name)).getroot()
+            img_name = root.findall('filename')[0].text
+            oneimg['img_path'] = os.path.join(images_path, img_name)
+            for oobj in root.findall('object'):
+                name = oobj.find('name').text
+                print(name)
+                print(len(name))
+                dis=len(name)
+                strname = str(name)
+                # for h in range(dis):
+                #     print (strname[h])
+                bndbox = oobj.find('polygon')
+                point0 = bndbox.find('point0').text
+                point1 = bndbox.find('point1').text
+                point2 = bndbox.find('point2').text
+                point3 = bndbox.find('point3').text
+                delta = dis / (int(point2[0]) - int(point0[0]))*0.1
+                print(delta)
+                # point_str = point0 + "," + point1 + "," + point2 + "," + point3 + "," + name
+                for h in range(dis):
+                    print (strname[h])
+                    point_str = name[h]+ "," + int(point0[0])+h*delta + "," + int(point0[1]) + "," + delta + "," + int(point1[1])-int(point0[1])
+                oneimg['boxes'].append(point_str)
+            objs.append(oneimg)
+print("length,", len(objs))

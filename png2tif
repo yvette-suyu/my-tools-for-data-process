@@ -1,0 +1,53 @@
+import PIL.Image
+from __future__ import print_function
+from __future__ import absolute_import
+from torch.utils.data import Dataset
+import sys
+import numpy as np
+import json, cv2, os
+import logging
+
+
+im = PIL.Image.open('test.jpg')
+im.save('test.tiff')
+
+
+class pngDataset(Dataset):
+    def __init__(self,
+                 images_path="/media/hszc/data/syh/tesseract/data",
+                 ):
+        self.images_path = images_path
+        self.index = 0
+        for x, _, z in os.walk(images_path):
+            for name in z:
+                if str(name).endswith(".png"):
+                    oneimg = {}
+                    oneimg['boxes'] = []
+                    root = os.path.join(x, name)
+                    
+                    self.objs.append(oneimg)
+        print("length,", len(self.objs))
+    def __len__(self):
+        return len(self.obj)
+
+    def __getitem__(self, idx):
+        return self.objs[idx]
+
+
+if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO)
+    reload(sys)
+    sys.setdefaultencoding('utf-8')
+
+    img_path = "/media/hszc/data/syh/tesseract/data"
+    xml_path  = img_path
+    output_path = "/media/hszc/data/syh/tesseract/418"
+    xmldataset = xmlDataset(images_path=img_path,xml_path=xml_path)
+    for oneimg in xmldataset:
+        img_path = oneimg["img_path"]
+        txt_path = os.path.join(output_path,os.path.basename(img_path)   + ".txt")
+        logging.info("writting:{}".format(txt_path))
+        with open(txt_path,"wt") as f:
+            for polygon in oneimg["boxes"]:
+                print(polygon,file=f)
+                   # print(polygon)

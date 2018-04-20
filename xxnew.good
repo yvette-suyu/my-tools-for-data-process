@@ -29,7 +29,7 @@ class xmlDataset(Dataset):
                     for oobj in root.findall('object'):
                         name = oobj.find('name').text
                         dis = len(name)
-                        point_str=[]
+                        
                         strname = str(name)
                         bndbox = oobj.find('polygon')
                         point0 = bndbox.find('point0').text
@@ -46,8 +46,8 @@ class xmlDataset(Dataset):
                             ww = str(round(delta,2))
                             hh = str(round(float(point1_list[1]) - float(point0_list[1]),2))
 
-                            point_str1 = name[h] + " " + xx + " " + yy + " " + ww + " " + hh + " " + "0"
-                            point_str.append(point_str1)
+                            point_str = name[h] + " " + xx + " " + yy + " " + ww + " " + hh + " " + "0"
+                            #point_str.append(point_str1)
                         oneimg['boxes'].append(point_str)
                     self.objs.append(oneimg)
         print("length,", len(self.objs))

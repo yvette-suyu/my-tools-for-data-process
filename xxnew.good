@@ -16,18 +16,20 @@ class xmlDataset(Dataset):
         self.images_path = images_path
         self.index = 0
         self.objs = []
+
         for x, _, z in os.walk(xml_path):
             for name in z:
                 if str(name).endswith(".xml"):
                     oneimg = {}
                     oneimg['boxes'] = []
+
                     root = ET.parse(os.path.join(x, name)).getroot()
                     img_name = root.findall('filename')[0].text
                     oneimg['img_path'] = os.path.join(images_path, img_name)
                     for oobj in root.findall('object'):
                         name = oobj.find('name').text
                         dis = len(name)
-
+                        point_str=[]
                         strname = str(name)
                         bndbox = oobj.find('polygon')
                         point0 = bndbox.find('point0').text
@@ -43,7 +45,9 @@ class xmlDataset(Dataset):
                             yy = str(round(float(point0_list[1]),2))
                             ww = str(round(delta,2))
                             hh = str(round(float(point1_list[1]) - float(point0_list[1]),2))
-                            point_str = name[h] + " " + xx + " " + yy + " " + ww + " " + hh + " " + "0"
+
+                            point_str1 = name[h] + " " + xx + " " + yy + " " + ww + " " + hh + " " + "0"
+                            point_str.append(point_str1)
                         oneimg['boxes'].append(point_str)
                     self.objs.append(oneimg)
         print("length,", len(self.objs))
@@ -65,9 +69,9 @@ if __name__ == '__main__':
     xmldataset = xmlDataset(images_path=img_path,xml_path=xml_path)
     for oneimg in xmldataset:
         img_path = oneimg["img_path"]
-        txt_path = os.path.join(output_path,os.path.basename(img_path)   + ".box")
-        logging.info("writting:{}".format(txt_path))
-        with open(txt_path,"wt") as f:
+        box_path = os.path.join(output_path,os.path.basename(img_path)   + ".box")
+        logging.info("writting:{}".format(box_path))
+        with open(box_path,"wt") as f:
             for polygon in oneimg["boxes"]:
                 print(polygon,file=f)
                    # print(polygon)

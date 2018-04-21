@@ -39,7 +39,7 @@ class xmlDataset(Dataset):
                         point0_list = point0.strip(',').split(',')
                         point2_list = point2.strip(',').split(',')
                         point1_list = point1.strip(',').split(',')
-                        delta = dis / ((float(point2_list[0]) - float(point0_list[0]))+0.01) * 1.0
+                        delta =  ((float(point2_list[0]) - float(point0_list[0]))+0.01) /dis * 1.0
                         for h in range(dis):
                             xx = str(round(float(point0_list[0]) + h * delta,2))
                             yy = str(round(float(point0_list[1]),2))
@@ -48,7 +48,7 @@ class xmlDataset(Dataset):
 
                             point_str = name[h] + " " + xx + " " + yy + " " + ww + " " + hh + " " + "0"
                             #point_str.append(point_str1)
-                        oneimg['boxes'].append(point_str)
+                            oneimg['boxes'].append(point_str)
                     self.objs.append(oneimg)
         print("length,", len(self.objs))
     def __len__(self):

@@ -36,6 +36,11 @@ class xmlDataset(Dataset):
                         point1 = bndbox.find('point1').text
                         point2 = bndbox.find('point2').text
                         point3 = bndbox.find('point3').text
+                        
+                        ### 公式 ### ；有现成公式 ###x+y=10
+                        ### 无关区域 ***
+                        ###最小外接矩形！
+                        
                         point0_list = point0.strip(',').split(',')
                         point2_list = point2.strip(',').split(',')
                         point1_list = point1.strip(',').split(',')

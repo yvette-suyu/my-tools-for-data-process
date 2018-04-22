@@ -1,0 +1,10 @@
+OCR command
+
+generate box
+tesseract langyp.fontyp.exp0.tif langyp.fontyp.exp0 -l eng -psm 7 batch.nochop makebox
+
+others http://www.cnblogs.com/zhongtang/p/5555950.html
+
+
+run jTessBoxEditor.jar
+java -Xms128m -Xmx1024m -jar jTessBoxEditor.jar

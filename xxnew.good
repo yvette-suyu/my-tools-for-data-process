@@ -28,6 +28,8 @@ class xmlDataset(Dataset):
                     oneimg['img_path'] = os.path.join(images_path, img_name)
                     for oobj in root.findall('object'):
                         name = oobj.find('name').text
+                        if name.startswith("###") or name.startswith("***"):
+                            continue
                         dis = len(name)
                         
                         strname = str(name)

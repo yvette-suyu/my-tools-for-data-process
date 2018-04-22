@@ -1,6 +1,7 @@
+#encoding=utf-8
 from __future__ import print_function
 from __future__ import absolute_import
-from torch.utils.data import Dataset
+
 import sys, xml
 import numpy as np
 import json, cv2, os
@@ -8,7 +9,7 @@ import logging
 import xml.etree.ElementTree as ET
 
 
-class xmlDataset(Dataset):
+class xmlDataset(object):
     def __init__(self,
                  xml_path="/media/hszc/data/syh/tesseract/data",
                  images_path="/media/hszc/data/syh/tesseract/data",
@@ -28,36 +29,51 @@ class xmlDataset(Dataset):
                     oneimg['img_path'] = os.path.join(images_path, img_name)
                     for oobj in root.findall('object'):
                         name = oobj.find('name').text
-                        if name.startswith("###") or name.startswith("***"):
+                        if name.startswith("###") or name.startswith("***") or name.startswith("@@@"):
                             continue
                         dis = len(name)
-                        
+
                         strname = str(name)
                         bndbox = oobj.find('polygon')
                         point0 = bndbox.find('point0').text
                         point1 = bndbox.find('point1').text
                         point2 = bndbox.find('point2').text
                         point3 = bndbox.find('point3').text
-                        
+
                         ### 公式 ### ；有现成公式 ###x+y=10
+                        ### picture @@@
                         ### 无关区域 ***
                         ###最小外接矩形！
-                        
-                        point0_list = point0.strip(',').split(',')
-                        point2_list = point2.strip(',').split(',')
-                        point1_list = point1.strip(',').split(',')
-                        delta =  ((float(point2_list[0]) - float(point0_list[0]))+0.01) /dis * 1.0
+
+                        point0_list = list(map(lambda x:float(x),point0.strip(',').split(',')))
+                        point1_list = list(map(lambda x:float(x),point1.strip(',').split(',')))
+                        point2_list = list(map(lambda x:float(x),point2.strip(',').split(',')))
+                        point3_list = list(map(lambda x:float(x),point3.strip(',').split(',')))
+
+
+
+                        xmin = min(point0_list[0],point1_list[0],point2_list[0],point3_list[0])
+                        ymin = min(point0_list[1],point1_list[1],point2_list[1],point3_list[1])
+                        xmax = max(point0_list[0],point1_list[0],point2_list[0],point3_list[0])
+                        ymax = max(point0_list[1],point1_list[1],point2_list[1],point3_list[1])
+
+                        # delta = ((float(point2_list[0]) - float(point0_list[0])) + 0.01) / dis * 1.0
+                        delta = (xmax-xmin)/dis*1.0
+                        if abs(delta) < 0.00001:
+                            logging.warning("invalid delta ")
+                            continue
                         for h in range(dis):
-                            xx = str(round(float(point0_list[0]) + h * delta,2))
-                            yy = str(round(float(point0_list[1]),2))
-                            ww = str(round(delta,2))
-                            hh = str(round(float(point1_list[1]) - float(point0_list[1]),2))
+                            xx = str(round(xmin + h * delta, 2))
+                            yy = str(round(ymin, 2))
+                            ww = str(round(delta, 2))
+                            hh = str(round(ymax-ymin, 2))
 
                             point_str = name[h] + " " + xx + " " + yy + " " + ww + " " + hh + " " + "0"
-                            #point_str.append(point_str1)
+                            # point_str.append(point_str1)
                             oneimg['boxes'].append(point_str)
                     self.objs.append(oneimg)
         print("length,", len(self.objs))
+
     def __len__(self):
         return len(self.obj)
 
@@ -71,14 +87,14 @@ if __name__ == '__main__':
     sys.setdefaultencoding('utf-8')
 
     img_path = "/media/hszc/data/syh/tesseract/data"
-    xml_path  = img_path
+    xml_path = img_path
     output_path = "/media/hszc/data/syh/tesseract/418"
-    xmldataset = xmlDataset(images_path=img_path,xml_path=xml_path)
+    xmldataset = xmlDataset(images_path=img_path, xml_path=xml_path)
     for oneimg in xmldataset:
         img_path = oneimg["img_path"]
-        box_path = os.path.join(output_path,os.path.basename(img_path)   + ".box")
+        box_path = os.path.join(output_path, os.path.basename(img_path) + ".box")
         logging.info("writting:{}".format(box_path))
-        with open(box_path,"wt") as f:
+        with open(box_path, "wt") as f:
             for polygon in oneimg["boxes"]:
-                print(polygon,file=f)
-                   # print(polygon)
+                print(polygon, file=f)
+                # print(polygon)

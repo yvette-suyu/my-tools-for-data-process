@@ -1,0 +1,147 @@
+#encoding=utf-8
+from __future__ import print_function
+from __future__ import absolute_import
+
+import sys, xml
+import numpy as np
+import json, cv2, os
+import logging
+import xml.etree.ElementTree as ET
+import PIL.Image
+
+
+class xmlDataset(object):
+    def __init__(self,
+                 xml_path="F:\data",
+                 images_path="F:\data",
+                 ):
+        self.images_path = images_path
+        self.index = 0
+        self.objs = []
+        alist = []
+        blist = []
+        newlist=[]
+        newbox=[]
+        newbox1=[]
+        newbox2=[]
+        fit=[]
+        linecount=0
+        cutxmax=0
+        flag=0
+        formula=0
+        for x, _, z in os.walk(xml_path):
+            for name in z:
+                if str(name).endswith(".xml"):
+                    oneimg = {}
+                    oneimg['boxes'] = []
+
+                    root = ET.parse(os.path.join(x, name)).getroot()
+                    img_name = root.findall('filename')[0].text
+                    oneimg['img_path'] = os.path.join(images_path, img_name)
+
+                    for size in root.findall('size'):
+
+                        sizeh = int(size.find('height').text)
+
+                    for oobj in root.findall('object'):
+                        name = oobj.find('name').text
+
+                        # if name.startswith("###") or name.startswith("***") or name.startswith("@@@"):
+                        #     continue
+                        dis = len(name)
+
+                        strname = str(name)
+                        bndbox = oobj.find('polygon')
+                        point0 = bndbox.find('point0').text
+                        point1 = bndbox.find('point1').text
+                        point2 = bndbox.find('point2').text
+                        point3 = bndbox.find('point3').text
+
+                        ### 公式 ### ；有现成公式 ###x+y=10
+                        ### picture @@@
+                        ### 无关区域 ***
+                        ###最小外接矩形！
+
+                        point0_list = list(map(lambda x:int(x),point0.strip(',').split(',')))
+                        point1_list = list(map(lambda x:int(x),point1.strip(',').split(',')))
+                        point2_list = list(map(lambda x:int(x),point2.strip(',').split(',')))
+                        point3_list = list(map(lambda x:int(x),point3.strip(',').split(',')))
+
+                        xmin = min(point0_list[0],point1_list[0],point2_list[0],point3_list[0])
+                        ymin = min(point0_list[1],point1_list[1],point2_list[1],point3_list[1])
+                        xmax = max(point0_list[0],point1_list[0],point2_list[0],point3_list[0])
+                        ymax = max(point0_list[1],point1_list[1],point2_list[1],point3_list[1])
+
+                        alist.append((xmin,ymin,xmax,ymax,name))
+                        alist.sort(key=lambda x: x[1])# array by y "<"
+                    for indexy in range(len(alist)-1):
+
+                        if alist[indexy+1][1]-alist[indexy][1]<10:
+                            blist.append((alist[indexy]))
+
+                        else:
+                            linecount=linecount+1
+                            flag=1
+                            blist.append((alist[indexy]))
+                            newlist.append(blist)
+                            blist = []
+
+                    blist.append(alist[indexy+1])
+                    newlist.append(blist)
+                    for linecc in range(len(newlist)):
+                        newlist[linecc].sort(key=lambda x: x[0])
+                        for num in range(len(newlist[linecc])):
+                            # num is the number of tuple
+                            # print (num)
+                            newbox2=newlist[linecc]
+                            if newlist[linecc][num][4]=="###" or newlist[linecc][num][4]=="***" or newlist[linecc][num][4] == "@@@":
+                                # newbox.append(newlist[linecc][num])
+                                print ('line',linecc,'index of formula is',num)
+                                if num == 0:
+                                    newbox1.append((newlist[linecc][num]))
+                                if num !=0 and num != len(newlist[linecc]):
+                                    newbox1.append((newbox2[0][0],newbox2[0][1],newlist[linecc][num-1][2],newbox2[0][3]))
+                                    newbox1.append(newlist[linecc][num])
+                                    newbox2 = newlist[linecc][num::]
+                                if num == len(newlist[linecc])-1:
+                                    newbox1.append((newbox2[0][0],newbox2[0][1],newlist[linecc][num-1][2],newbox2[0][3]))
+                                    newbox1.append((newlist[linecc][num]))
+                            newbox1.append((newbox2[0][0],newbox2[0][1],newbox2[-1][2],newbox2[-1][3]))
+
+                        print('newbox', newbox1)
+                        newbox.append(newbox1)
+                        newbox1=[]
+                        
+
+
+                    alist = []
+
+
+
+
+
+    def __len__(self):
+        return len(self.obj)
+
+    def __getitem__(self, idx):
+        return self.objs[idx]
+
+
+if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO)
+    reload(sys)
+    sys.setdefaultencoding('utf-8')
+
+
+    img_path = "F:\data"
+    xml_path = img_path
+    output_path = "F:/recieve"
+    xmldataset = xmlDataset(images_path=img_path, xml_path=xml_path)
+    for oneimg in xmldataset:
+        img_path = oneimg["img_path"]
+        box_path = os.path.join(output_path, os.path.basename(img_path) + ".font.exp"+".box")
+        logging.info("writting:{}".format(box_path))
+        with open(box_path, "wt") as f:
+            for polygon in oneimg["boxes"]:
+                print(polygon, file=f)
+                # print(polygon)

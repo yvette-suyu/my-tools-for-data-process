@@ -12,14 +12,23 @@ import PIL.Image
 
 class xmlDataset(object):
     def __init__(self,
-                 xml_path="/media/hszc/data/syh/tesseract/data",
-                 images_path="/media/hszc/data/syh/tesseract/data",
+                 xml_path="F:\data",
+                 images_path="F:\data",
                  ):
         self.images_path = images_path
         self.index = 0
         self.objs = []
         alist = []
-
+        blist = []
+        newlist=[]
+        newbox=[]
+        newbox1=[]
+        newbox2=[]
+        fit=[]
+        linecount=0
+        cutxmax=0
+        flag=0
+        formula=0
         for x, _, z in os.walk(xml_path):
             for name in z:
                 if str(name).endswith(".xml"):
@@ -34,12 +43,11 @@ class xmlDataset(object):
 
                         sizeh = int(size.find('height').text)
 
-
-
                     for oobj in root.findall('object'):
                         name = oobj.find('name').text
-                        if name.startswith("###") or name.startswith("***") or name.startswith("@@@"):
-                            continue
+
+                        # if name.startswith("###") or name.startswith("***") or name.startswith("@@@"):
+                        #     continue
                         dis = len(name)
 
                         strname = str(name)
@@ -59,17 +67,61 @@ class xmlDataset(object):
                         point2_list = list(map(lambda x:int(x),point2.strip(',').split(',')))
                         point3_list = list(map(lambda x:int(x),point3.strip(',').split(',')))
 
-
-
                         xmin = min(point0_list[0],point1_list[0],point2_list[0],point3_list[0])
                         ymin = min(point0_list[1],point1_list[1],point2_list[1],point3_list[1])
                         xmax = max(point0_list[0],point1_list[0],point2_list[0],point3_list[0])
                         ymax = max(point0_list[1],point1_list[1],point2_list[1],point3_list[1])
 
                         alist.append((xmin,ymin,xmax,ymax,name))
-                    alist.sort(key=lambda x:x[1])
-                    # for read every y
-                    alist
+                        alist.sort(key=lambda x: x[1])# array by y "<"
+                    for indexy in range(len(alist)-1):
+
+                        if alist[indexy+1][1]-alist[indexy][1]<10:
+                            blist.append((alist[indexy]))
+
+                        else:
+                            linecount=linecount+1
+                            flag=1
+                            blist.append((alist[indexy]))
+                            newlist.append(blist)
+                            blist = []
+
+                    blist.append(alist[indexy+1])
+                    newlist.append(blist)
+                    for linecc in range(len(newlist)):
+                        newlist[linecc].sort(key=lambda x: x[0])
+                        for num in range(len(newlist[linecc])):
+
+                            # print (num)
+                            if newlist[linecc][num][4]=="###" or newlist[linecc][num][4]=="***" or newlist[linecc][num][4] == "@@@":
+                                cutxmax=newlist[linecc][num][0]
+                                # cutxmin=newlist[linecc][num][0]
+                                newbox1.append((newlist[linecc][formula][0],newlist[linecc][formula][1],
+                                                                        cutxmax,newlist[linecc][formula][3]))
+                                formula=formula+1
+                                
+                                newbox2.append(newbox1)
+                                # newbox2.append(newlist[linecc][num::])
+
+                            formula=0
+                        newbox= newbox2
+                    print ("hi",newbox)
+
+
+
+
+
+
+                    #
+                    # print ("lines",linecount)
+                    # print("alist",alist)
+                    # print ('blist',blist)
+                    # print ("newlist",newlist)
+                    # print("newlistx", newlist[0][0][0],type(newlist[0][0][0]))
+
+                    # print(name,alist)
+                    alist = []
+
 
 
 
@@ -87,9 +139,9 @@ if __name__ == '__main__':
     sys.setdefaultencoding('utf-8')
 
 
-    img_path = "/media/hszc/data/syh/tesseract/data"
+    img_path = "F:\data"
     xml_path = img_path
-    output_path = "/media/hszc/data/syh/test2"
+    output_path = "F:/recieve"
     xmldataset = xmlDataset(images_path=img_path, xml_path=xml_path)
     for oneimg in xmldataset:
         img_path = oneimg["img_path"]
